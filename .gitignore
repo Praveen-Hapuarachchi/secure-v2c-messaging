@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+RSA_pub.der
+*.der
+.venv/
+venv/
+.vscode/
+
+# NotebookLM-generated media (large binary files, not source)
+NoteBookLM/
+*.mp4
+*.m4a
