@@ -1,15 +1,33 @@
 # Secure Vehicle-to-Controller Message Exchange
 ## Using Hybrid Encryption and HMAC Authentication
 
-**EE8257 — Information Security | Group 29**
-Faculty of Engineering, University of Ruhuna
+**H.P.L. Hapuarachchi**
+EE8257 — Information Security | Faculty of Engineering, University of Ruhuna
 
-| Member | Registration |
-|--------|-------------|
-| H.P.L. Hapuarachchi | EG/2020/3953 |
-| W.M.U.N. Bandara | EG/2020/3850 |
-| G.M.L.D. Senarathna | EG/2020/4202 |
-| W.S. Chathumal | EG/2020/3867 |
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+![Tests](https://img.shields.io/badge/unit%20tests-120%2F120%20passing-brightgreen)
+
+A full hybrid-encryption secure channel — RSA-2048 handshake, AES-256-CBC + HMAC-SHA256 data protection, replay/MitM/tampering detection — built from scratch in Python and demonstrated live over real TCP sockets. Built as a university Information Security course project (EE8257) and designed to double as a portfolio piece.
+
+---
+
+### Quick Start
+
+```bash
+git clone https://github.com/Praveen-Hapuarachchi/secure-v2c-messaging.git
+cd secure-v2c-messaging
+pip install cryptography pytest
+
+# Prove the crypto works (120 tests, ~1s)
+python -m pytest tests/test_hmac_engine.py tests/test_aes_engine.py tests/test_rsa_engine.py -v
+
+# See it live — two terminals
+python controller.py          # terminal 1
+python vehicle.py VH-001      # terminal 2
+```
+
+See [Section 10](#10-how-to-run-the-project) for the full walkthrough, including attack simulations (MitM, replay, tampering).
 
 ---
 
@@ -36,7 +54,8 @@ Faculty of Engineering, University of Ruhuna
     - 10.5 [Step 5 — Full Test Suite](#105-step-5--full-test-suite)
 11. [Expected Outputs](#11-expected-outputs)
 12. [Security Guarantees](#12-security-guarantees)
-13. [Viva Preparation — Common Questions](#13-viva-preparation--common-questions)
+13. [Screenshots](#13-screenshots)
+14. [Viva Preparation — Common Questions](#14-viva-preparation--common-questions)
 
 ---
 
@@ -65,7 +84,7 @@ Vehicles transmit sensitive telemetry — speed, location, fuel levels, engine a
 | **Impersonation** | Pretend to be a legitimate vehicle |
 | **Man-in-the-Middle** | Intercept key exchange and substitute their own key |
 
-Our system defeats all five threats using layered cryptographic mechanisms grounded in the EE8257 syllabus.
+This system defeats all five threats using layered cryptographic mechanisms grounded in the EE8257 syllabus.
 
 ---
 
@@ -292,7 +311,7 @@ Vehicle (V)                    Untrusted Network              Controller (C)
 
 ## 6. Attack Mitigations
 
-| Attack | How it works | Our countermeasure | Syllabus |
+| Attack | How it works | Countermeasure | Syllabus |
 |--------|-------------|-------------------|---------|
 | **Eavesdropping** | Passive interception of network traffic | AES-256-CBC encryption — ciphertext reveals nothing | L4: AES key space 2²⁵⁶ |
 | **Message tampering** | Flip bytes in ciphertext | HMAC-SHA256 detects any modification (HMAC_FAIL) | L6: HMAC integrity |
@@ -337,7 +356,7 @@ project/
 │   ├── rsa_engine.py           ← Module 3: RSA-2048 handshake engine
 │   └── network.py              ← Module 4: TCP length-prefix framing
 │
-├── demos/                      ← Visual demonstrations (run for viva)
+├── demos/                      ← Visual demonstrations
 │   ├── demo_hmac.py            ← 7 HMAC demonstrations + attack sims
 │   ├── demo_aes.py             ← 10 AES demonstrations + attack sims
 │   ├── demo_rsa.py             ← 11 RSA demonstrations + attack sims
@@ -395,9 +414,9 @@ python -c "from cryptography.hazmat.primitives.asymmetric import rsa; print('OK'
 
 ## 10. How to Run the Project
 
-> **Important:** Run all commands from the project root directory:
-> ```
-> cd "C:\Users\hapup\OneDrive\Desktop\7th sem\EC7201 Information Security\Project"
+> **Important:** Run all commands from the project root directory (the folder containing `controller.py` and `vehicle.py`).
+> ```bash
+> cd path/to/cloned-repo
 > ```
 
 ---
@@ -450,7 +469,7 @@ python -m pytest tests/test_hmac_engine.py tests/test_aes_engine.py tests/test_r
 
 Expected: `120 passed`
 
-This is your primary proof statement for the viva. Screenshot this output.
+This is the primary automated proof of correctness for this project. Screenshot this output.
 
 ---
 
@@ -500,7 +519,7 @@ Duration: ~15 seconds. Starts a controller server automatically in a background 
 
 ### 10.3 Step 3 — Live Two-Terminal Demo
 
-This is the most visually impressive demonstration for the viva. You run the controller and vehicle as separate processes communicating over a real TCP connection.
+This is the most visually impressive demonstration of the system. You run the controller and vehicle as separate processes communicating over a real TCP connection.
 
 **You need two terminal windows open simultaneously.**
 
@@ -516,7 +535,7 @@ You will see:
 
 ```
 ════════════════════════════════════════════════════════════════
-  EE8257 Information Security — Group 29
+  Secure Vehicle-to-Controller Message Exchange
   Module 4: Controller TCP Server
 ════════════════════════════════════════════════════════════════
 
@@ -643,6 +662,8 @@ What these tests cover:
 
 - `TestSecurityProperties` (6 tests): Plaintext bytes not found in ciphertext; all HMAC tags are exactly 32 bytes; all IVs are 16 bytes and unique; RSA_pub fingerprint matches over TCP; nonces are 128 bits; SESSION_READY token present in MSG 4.
 
+> **Note:** A handful of these tests can be flaky under slow-socket conditions (Windows loopback timing) rather than indicating a logic bug — see the note after the full-suite run below.
+
 ---
 
 ### 10.5 Step 5 — Full Test Suite
@@ -702,7 +723,40 @@ After a successful handshake and during all subsequent data exchange, the system
 
 ---
 
-## 13. Viva Preparation — Common Questions
+## 13. Screenshots
+
+<!--
+  Add screenshots here before pushing. Suggested workflow:
+    1. Create a folder:  docs/screenshots/
+    2. Save your terminal screenshots there, e.g.:
+         docs/screenshots/unit-tests-120-passed.png
+         docs/screenshots/controller-handshake.png
+         docs/screenshots/vehicle-live-demo.png
+         docs/screenshots/attack-detection-demo.png
+    3. Reference them below with normal Markdown image syntax:
+         ![Unit tests passing](docs/screenshots/unit-tests-120-passed.png)
+    4. Delete this comment block once screenshots are in place.
+-->
+
+**Unit tests — 120/120 passing:**
+
+`docs/screenshots/unit-tests-120-passed.png`
+
+**Live handshake — Controller terminal:**
+
+`docs/screenshots/controller-handshake.png`
+
+**Live handshake — Vehicle terminal:**
+
+`docs/screenshots/vehicle-live-demo.png`
+
+**Attack simulation — tampering / replay / MitM detected:**
+
+`docs/screenshots/attack-detection-demo.png`
+
+---
+
+## 14. Viva Preparation — Common Questions
 
 **Q: Why is RSA used only for key exchange and not for every message?**
 
@@ -720,14 +774,14 @@ A: A bare hash h(M) provides integrity but not authentication. Trudy can replace
 
 A: MAC-then-Encrypt requires decryption before MAC verification. The POODLE attack (2014) exploited this in SSL 3.0 — the receiver's error response to bad PKCS7 padding became an oracle allowing byte-by-byte plaintext recovery. Encrypt-then-MAC verifies the HMAC before any decryption attempt. If verification fails, `ValueError` is raised immediately. The padding oracle attack surface does not exist.
 
-**Q: What is the avalanche effect and how does your system use it?**
+**Q: What is the avalanche effect and how does the system use it?**
 
-A: The avalanche effect (Lecture 6) is the property that changing one bit in a hash input changes approximately 50% of the output bits. Our HMAC-SHA256 demonstrations show that changing a single character (e.g., "speed=87.4" → "speed=87.5") produces an output differing by ~120-130 of 256 bits. This means an attacker cannot make "small" or "undetectable" changes — any modification completely invalidates the HMAC tag.
+A: The avalanche effect (Lecture 6) is the property that changing one bit in a hash input changes approximately 50% of the output bits. The HMAC-SHA256 demonstrations show that changing a single character (e.g., "speed=87.4" → "speed=87.5") produces an output differing by ~120-130 of 256 bits. This means an attacker cannot make "small" or "undetectable" changes — any modification completely invalidates the HMAC tag.
 
-**Q: How does your system compare to TLS?**
+**Q: How does this system compare to TLS?**
 
-A: Our system mirrors TLS architecture closely. TLS also uses RSA (or ECDHE) for key exchange in the handshake, then AES-CBC (or AES-GCM in TLS 1.3) for data transfer. Our five-message protocol corresponds to the TLS ClientHello/ServerHello/Certificate/ClientKeyExchange/Finished sequence. Our Encrypt-then-MAC pattern matches TLS 1.3's requirement. The differences are that TLS includes a full certificate chain (we use a single pre-trusted key), TLS 1.3 provides perfect forward secrecy via ECDHE (we use static RSA), and TLS supports session resumption (we do not).
+A: This system mirrors TLS architecture closely. TLS also uses RSA (or ECDHE) for key exchange in the handshake, then AES-CBC (or AES-GCM in TLS 1.3) for data transfer. The five-message protocol here corresponds to the TLS ClientHello/ServerHello/Certificate/ClientKeyExchange/Finished sequence. The Encrypt-then-MAC pattern matches TLS 1.3's requirement. The differences are that TLS includes a full certificate chain (this project uses a single pre-trusted key), TLS 1.3 provides perfect forward secrecy via ECDHE (this project uses static RSA), and TLS supports session resumption (this project does not).
 
 ---
 
-*EE8257 Information Security — Group 29 — Faculty of Engineering, University of Ruhuna*
+*H.P.L. Hapuarachchi — EE8257 Information Security — Faculty of Engineering, University of Ruhuna*
